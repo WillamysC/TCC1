@@ -39,6 +39,8 @@ def titulo(h_i, P_i, fluido) -> float:
 def deltaExergia(m_dot, h_in, h_out, T_amb, s_in, s_out):
     return m_dot*((h_in - h_out) - T_amb*(s_in - s_out))
 
+def Ex(m_dot, h, h_amb,T_amb, s, s_amb):
+    return m_dot*((h - h_amb) - T_amb*(s - s_amb))
 
 def S_ger(m_dot, s_in, s_out):
     """
