@@ -20,61 +20,59 @@ T_eva = -30 + 273.15 #K
 Q_eva = 248.87*1000 #W
 
 
-def computeProperties(fluid:str) -> dict[pd.DataFrame]:
+def computeProperties(fluid:list[str]) -> dict[pd.DataFrame]:
 
     """PONTO 1"""
-    h1 = CP.PropsSI('H', 'T', T_eva, 'Q', 1, fluid)
-    P1 = CP.PropsSI('P', 'T', T_eva, 'Q', 1, fluid)
-    s1 = CP.PropsSI('S', 'P', P1, 'H', h1, fluid)
+    h1 = CP.PropsSI('H', 'T', T_eva, 'Q', 1, fluid_list[0])
+    P1 = CP.PropsSI('P', 'T', T_eva, 'Q', 1, fluid_list[0])
+    s1 = CP.PropsSI('S', 'P', P1, 'H', h1, fluid_list[0])
 
     """PONTO 2s"""
-    P2 = CP.PropsSI('P', 'T', 5+273.15, 'Q', 1, fluid)
+    P2 = CP.PropsSI('P', 'T', 5+273.15, 'Q', 1, fluid_list[0])
     s2s = s1
-    h2s = CP.PropsSI('H', 'P', P2, 'S', s2s, fluid)
+    h2s = CP.PropsSI('H', 'P', P2, 'S', s2s, fluid_list[0])
 
     """PONTO 2"""
     eta_c = 0.85
     h2 = (h2s - h1)/eta_c + h1
-    T2 = CP.PropsSI('T', 'H', h2, 'P', P2, fluid)
-    s2 = CP.PropsSI('S', 'P', P2, 'H', h2, fluid)
+    T2 = CP.PropsSI('T', 'H', h2, 'P', P2, fluid_list[0])
+    s2 = CP.PropsSI('S', 'P', P2, 'H', h2, fluid_list[0])
 
     """PONTO 3"""
     P3 = P2 
-    h3 = CP.PropsSI('H', 'P', P3, 'Q', 1, fluid)
-    # P2 = CP.PropsSI('P', 'T', T_cond, 'Q', 0, fluid)
-    s3 = CP.PropsSI('S', 'P', P3, 'H', h3, fluid)
+    h3 = CP.PropsSI('H', 'P', P3, 'Q', 1, fluid_list[0])
+    # P2 = CP.PropsSI('P', 'T', T_cond, 'Q', 0, fluid_list[0])
+    s3 = CP.PropsSI('S', 'P', P3, 'H', h3, fluid_list[0])
 
     
     """PONTO 4s"""
     s4s = s3
-    P4 = CP.PropsSI('P', 'T', T_cond, 'S', s4s, fluid)
-    h4s = CP.PropsSI('H', 'P', P4, 'S', s4s, fluid)
+    P4 = CP.PropsSI('P', 'T', T_cond, 'S', s4s, fluid_list[0])
+    h4s = CP.PropsSI('H', 'P', P4, 'S', s4s, fluid_list[0])
 
     """PONTO 4"""
     h4 = (h4s - h3)/eta_c + h3
-    s4 = CP.PropsSI('S', 'H', h4, 'P', P4, fluid)
+    s4 = CP.PropsSI('S', 'H', h4, 'P', P4, fluid_list[0])
 
     """PONTO 5"""
     P5 = P4
-    # h5 = CP.PropsSI('H', 'T', T_cond, 'Q', 0, fluid)
-    h5 = CP.PropsSI('H', 'P', P5, 'Q', 0, fluid)
-
-    s5 = CP.PropsSI('S', 'H', h5, 'P', P5, fluid)
+    h5 = CP.PropsSI('H', 'T', T_cond, 'Q', 0, fluid_list[0])
+    s5 = CP.PropsSI('S', 'H', h5, 'P', P5, fluid_list[0])
 
     """PONTO 6"""
     P6 = P2
     h6 = h5
-    s6 = CP.PropsSI('S', 'H', h6, 'P', P6, fluid)
+    s6 = CP.PropsSI('S', 'H', h6, 'P', P6, fluid_list[0])
     
     """PONTO 7"""
     P7 = P2
-    h7 = CP.PropsSI('H', 'T', 5+273.15, 'Q', 0, fluid)
-    s7 = CP.PropsSI('S', 'P', P7, 'H', h7, fluid)
+    h7 = CP.PropsSI('H', 'T', 5+273.15, 'Q', 0, fluid_list[0])
+    s7 = CP.PropsSI('S', 'P', P7, 'H', h7, fluid_list[0])
 
     """PONTO 8"""
     P8 = P1
     h8 = h7
-    s8 = CP.PropsSI('S', 'P', P8, 'H', h8, fluid)
+    s8 = CP.PropsSI('S', 'P', P8, 'H', h8, fluid_list[0])
 
 
     """ANALISE DE ENERGIA"""
@@ -85,10 +83,14 @@ def computeProperties(fluid:str) -> dict[pd.DataFrame]:
     
     m1 = m2 = m7 = m8 = m_bp
     m3 = m4 = m5 = m6 = m_ap
+    # Q_Con = m_ap*(h6 - h5)
     Q_Con = m_ap*(h5 - h4s) #isentropico
 
     trocadoresCalor = pd.DataFrame({"Q (kW)": [Q_eva, Q_Con]}, index=["evaporador", "condensador"]).div(1000)
 
+
+    # W_inB = W_ent(m_bp, h2, h1)
+    # W_inA = W_ent(m_ap, h4, h3)
     W_inB = W_ent(m_bp, h2s, h1) #isentropico
     W_inA = W_ent(m_ap, h4s, h3) #isentropico
     W_entr = W_inB + W_inA
@@ -98,6 +100,26 @@ def computeProperties(fluid:str) -> dict[pd.DataFrame]:
     print(f"COP: {COP:.3f}")
 
     """ANALISE DE EXERGIA"""
+    # T_L = 255 #K
+    T_L = -25 + 273.15
+    T_H = T_amb
+    # >>>>>>>>> BASEADO NO ARTIGO <<<<<<<<<<<
+    # ED_cbp = W_inB + deltaExergia(m_bp, h1, h2, T_amb, s1, s2) # Perda exergia no compressor de baixa pressao
+    # ED_cap = W_inA + deltaExergia(m_ap, h3, h4, T_amb, s3, s4) # Perda exergia no compressor de alta pressao
+
+    # ED_eva = deltaExergia(m_bp, h8, h1, T_amb, s8, s1) + Q_eva*(1 - T_amb/T_L)
+    # ED_cond = deltaExergia(m_ap, h4, h5, T_amb, s4, s5) - abs(Q_Con)*(1 - T_amb/T_H) 
+
+    # ED_veap = deltaExergia(m_ap, h5, h6, T_amb, s5, s6)
+    # ED_vebp = deltaExergia(m_bp, h7, h8, T_amb, s7, s8)
+
+    # # ED_wi = deltaExergia(m_bp, h2, h3, T_amb, s2, s3)
+
+    # ED_cf = deltaExergia(m_bp, h2, h7, T_amb, s2, s7) + deltaExergia(m_ap, h6, h3, T_amb, s6, s3) 
+
+    # ED_total = ED_cap + ED_cbp + ED_eva + ED_cond + ED_veap + ED_vebp + ED_cf
+    # print
+    # EDdf = exergiaDF(ED_cap, ED_cbp, ED_eva, ED_cond, ED_veap, ED_vebp, ED_cf)
 
     """ANALISE DE EXERGIA (isentropica)"""
     # >>>>>>>>> BASEADO NO ARTIGO <<<<<<<<<<<
@@ -113,6 +135,7 @@ def computeProperties(fluid:str) -> dict[pd.DataFrame]:
     ED_cf = deltaExergia(m_bp, h2s, h7, T_amb, s2s, s7) + deltaExergia(m_ap, h6, h3, T_amb, s6, s3) 
 
     ED_total_isen = ED_cap + ED_cbp + ED_eva + ED_cond + ED_veap + ED_vebp + ED_cf
+    print
     EDdf_isen = exergiaDF(ED_cap, ED_cbp, ED_eva, ED_cond, ED_veap, ED_vebp, ED_cf)
 
     # >>>>>>>>> BASEADO NO ÇENGEL  <<<<<<<<<<<
@@ -120,10 +143,32 @@ def computeProperties(fluid:str) -> dict[pd.DataFrame]:
     ED_cbp1 = m_bp*T_amb*(s2s - s1)
     ED_cap1 = m_ap*T_amb*(s4s - s3)
     ED_eva1 = T_amb*(m_bp*(s1 - s8) - Q_eva/T_L)
+    # print( f'{T_amb}*({m_bp}*({s1} - {s8}) - {abs(Q_eva)}/{T_L})')
     ED_cond1 = T_amb*(m_ap*(s5 - s4s) + abs(Q_Con)/T_H)
     ED_veap1 = m_ap*T_amb*(s6 - s5)
     ED_vebp1 = m_bp*T_amb*(s8 - s7)
     ED_cf1 = T_amb*(m_bp*(s7 - s2s) + m_ap*(s3 - s6))
+    # print(f'{T_amb}*({m_bp}*({s7} - {s2s}) + {m_ap}*({s3} - {s6}))')
+
+
+    """normal"""
+    # ED_cbp1 = m_bp*T_amb*(s2 - s1)
+    # ED_cap1 = m_ap*T_amb*(s5 - s4)
+    # ED_eva1 = T_amb*(m_bp*(s1 - s9) - Q_eva/T_L)
+    # # X_eva = T_amb*(m_lower*(s1 - s8) - Q_L/)
+
+    # ED_cond1 = T_amb*(m_ap*(s6 - s5) + abs(Q_Con)/T_H)
+    # ED_veap1 = m_ap*T_amb*(s7 - s6)
+    # ED_vebp1 = m_bp*T_amb*(s9 - s8)
+    # ED_wi1 = m_bp*T_amb*(s2 - s3)
+    # # m_dot*((h_in - h_out) - T_amb*(s_in - s_out))
+    # # deltaExergia(m_dot, h_in, h_out, T_amb, s_in, s_out):
+    # ED_wi = deltaExergia(m_bp, h2, h3, T_amb, s2, s3)
+    # ED_cf1 = T_amb*(m_ap*(s7 - s4) + m_bp*(s8 - s3))
+
+    # print(T_amb*m_bp*(s1 - s9), T_amb*Q_eva/T_eva)
+    # print(T_amb*m_ap*(s6 - s5s), T_amb*abs(Q_Con)/T_cond)
+    # print(W_entr - Q_eva*(T_amb - T_eva)/T_eva)
 
     ED_total1 = ED_cap1 + ED_cbp1 + ED_eva1 + ED_cond1 + ED_veap1 + ED_vebp1 + ED_cf1
 
@@ -148,39 +193,9 @@ def computeProperties(fluid:str) -> dict[pd.DataFrame]:
     return results
 
      
-results = computeProperties('NH3')
-for key1, df1 in results.items():
-    print(df1)
-
-#'CFC', 'HCFC', 'HFC', 'propyne'
-fluids = ['NH3', 'R744', '1BUTENE', 'R1233zd(E)', 'R1234yf', 'R1234ze(E)', 'R1243zf']
-# print(CP.PropsSI("H","T",303.15,"Q",0,"R744"))
-
-def computeResults(fluids:list[str]):
-    
-    result_dict={}
-
-    for fluid in fluids:
-        # CP.set_reference_state(fluid ,'ASHRAE')
-        results = computeProperties(fluid)
-        result_dict[fluid] = results
-
-    # result_dict = {
-    #     "fluid": fluids,
-    #     "resultados":resut_list}
-
-    # df_df = pd.DataFrame(result_dict)
-    return result_dict
+results = computeProperties(fluid_list)
 
 
-a = computeResults(fluids)
-# print(a.dtypes)
-
-
-# print(a)
-
-for key, df in a.items():
-    print(key)
-    for keey, dff in df.items():
-        print(dff)
-    print('\n')
+for key, df in results.items():
+    # print(key)
+    print(df)

@@ -16,10 +16,19 @@ def propertiesDF(pontos: list[int], m: list[float], p: list[float], h: list[floa
 
     return df
 
-def exergiaDF(ED_cap, ED_cbp, ED_eva, ED_cond, ED_veap, ED_vebp, ED_wi, ED_cf)->pd.DataFrame:
+def exergiaDF(ED_cap, ED_cbp, ED_eva, ED_cond, ED_veap, ED_vebp, ED_cf)->pd.DataFrame:
     columns = {
-        "comp": ["Compressor A", "Compressor B", "Evaporador", "Condensador", "Valvula A", "Valvula B", "Intercooler", "Camara Flash"],
-        "ED (kW)": [ED_cap, ED_cbp, ED_eva, ED_cond, ED_veap, ED_vebp, ED_wi, ED_cf]
+        "comp": ["Compressor A", "Compressor B", "Evaporador", "Condensador", "Valvula A", "Valvula B", "Camara Flash"],
+        "ED (kW)": [ED_cap, ED_cbp, ED_eva, ED_cond, ED_veap, ED_vebp, ED_cf]
+    }
+    df = pd.DataFrame(columns)
+    df["ED (kW)"] = df["ED (kW)"].div(1000)
+    return df
+
+def exergiaDF_novo(ED_cap, ED_cbp, ED_eva, ED_cond, ED_veap, ED_vebp, ED_cf)->pd.DataFrame:
+    columns = {
+        "comp": ["Compressor A", "Compressor B", "Evaporador", "Condensador", "Valvula A", "Valvula B", "Camara Flash"],
+        "ED (kW)": [ED_cap, ED_cbp, ED_eva, ED_cond, ED_veap, ED_vebp, ED_cf]
     }
     df = pd.DataFrame(columns)
     df["ED (kW)"] = df["ED (kW)"].div(1000)
