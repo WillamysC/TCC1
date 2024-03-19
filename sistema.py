@@ -85,6 +85,14 @@ def computeProperties(fluid:str) -> dict[pd.DataFrame]:
     
     m1 = m2 = m7 = m8 = m_bp
     m3 = m4 = m5 = m6 = m_ap
+
+    massas = [m1, m2, m3, m4, m5, m6, m7, m8]
+    pressao = [P1, P2, P3, P4, P5, P6, P7, P8]
+    entalpias = [h1, h2s, h3, h4s, h5, h6, h7, h8]
+    entropias = [s1, s2s, s3, s4s, s5, s6, s7, s8]
+
+    dfProps = propertiesDF(list(range(1,len(entalpias)+1)), massas, pressao, entalpias, entropias)
+
     Q_Con = m_ap*(h5 - h4s) #isentropico
 
     trocadoresCalor = pd.DataFrame({"Troc. de Calor":["evaporador", "condensador"],"Q (kW)": [Q_eva, Q_Con]})
@@ -97,7 +105,7 @@ def computeProperties(fluid:str) -> dict[pd.DataFrame]:
     compressores["W_ent (kW)"] = compressores["W_ent (kW)"].div(1000)
 
     COP = m_bp*(h1 - h8)/W_entr
-    print(f"COP: {COP:.3f}")
+    # print(f"COP: {COP:.3f}")
 
     """ANALISE DE EXERGIA"""
 
@@ -131,19 +139,16 @@ def computeProperties(fluid:str) -> dict[pd.DataFrame]:
 
     EDdf1 = exergiaDF(ED_cap1, ED_cbp1, ED_eva1, ED_cond1, ED_veap1, ED_vebp1, ED_cf1)
 
+    eta_II = abs(Q_eva * (1 - T_amb/T_L))/W_entr
 
-    massas = [m1, m2, m3, m4, m5, m6, m7, m8]
-    pressao = [P1, P2, P3, P4, P5, P6, P7, P8]
-    entalpias = [h1, h2s, h3, h4s, h5, h6, h7, h8]
-    entropias = [s1, s2s, s3, s4s, s5, s6, s7, s8]
-
-    dfProps = propertiesDF(list(range(1,len(entalpias)+1)), massas, pressao, entalpias, entropias)
+    eficiencia = pd.DataFrame({"COP": [COP], "Eta_II": [eta_II]})
 
     results = {
         "dfPropriedades": dfProps,
+        "dfEficiencia": eficiencia.round(3),
         "dfTrocadoresCalor": trocadoresCalor.round(3),
         "dfCompressores": compressores.round(3),
-        "dfExergiasDestruiadas1": EDdf1.round(4)
+        "dfExergiasDestruiadas": EDdf1.round(4)
         # "exergiasDestruiadas": EDdf.round(4)
         # "exergiasDestruiadas":EDdf_isen.round(4),
     }
@@ -167,34 +172,36 @@ def computeResults(fluids:list[str]):
 
 results = computeResults(fluids)
 
-list_trocadoresCalor = []
-list_compressores  = []
-list_exergiasDestruiadas1 = []
-list_Propriedades = []
+def concat_df_by_chave(lista_chaves):
+    dfs = {}
+    
+    for key, df_dict in results.items():
+    
+        try:
+            for chave in lista_chaves:
+                df = df_dict[chave]
+                df["Refrigerante"] = key
+                if chave in dfs:
+                    dfs[chave].append(df)
+                else:
+                    dfs[chave] = [df]
+        except Exception as e:
+                    print(f"Error processing '{key}': {e}")
+                    continue
+            
+    concatenated_dfs = {}
+    for chave, df_list in dfs.items():
+        concatenated_dfs[chave] = pd.concat(df_list, ignore_index=True)
 
-for key, df in results.items():
+    return concatenated_dfs
 
-    for keey, dff in df.items():
-        dff["Refrigerante"] = key
-        
-        if keey == 'dfExergiasDestruiadas1':
-            list_exergiasDestruiadas1.append(dff)
-        elif keey == 'dfCompressores':
-            list_compressores.append(dff)
-        elif keey == 'dfTrocadoresCalor':
-            list_trocadoresCalor.append(dff)
-        else:
-            list_Propriedades.append(dff)
-        
-exergiasDestruiadas1_df = pd.concat(list_exergiasDestruiadas1, ignore_index=True)
-compressores_df = pd.concat(list_compressores, ignore_index=True)
-trocadoresCalor_df = pd.concat(list_trocadoresCalor, ignore_index=True)
-Propriedades_df = pd.concat(list_Propriedades, ignore_index=True)
+lista_chaves = ["dfPropriedades",
+        "dfEficiencia",
+        "dfTrocadoresCalor",
+        "dfCompressores",
+        "dfExergiasDestruiadas"]
 
-print(Propriedades_df, trocadoresCalor_df, compressores_df, exergiasDestruiadas1_df)
+concatenated_dfs = concat_df_by_chave(lista_chaves)
 
-# for key, df in a.items():
-#     print(key)
-#     for keey, dff in df.items():
-#         print(dff)
-#     print('\n')
+for i, df in concatenated_dfs.items():
+    print(i, df) 
